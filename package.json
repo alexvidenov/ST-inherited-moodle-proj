@@ -4,6 +4,8 @@
   "description": "bot who helps in server",
   "main": "index.js",
   "scripts": {
+    "commands": "node deploy-commands.js ",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
