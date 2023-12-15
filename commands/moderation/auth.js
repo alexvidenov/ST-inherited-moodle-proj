@@ -5,7 +5,7 @@ module.exports = {
     .setName('auth')
     .setDescription('Authenticate with your Moodle account'),
     async execute(interaction) {
-        const moodleAuthUrl = `http://moodledomain.com/local/oauth/login.php?client_id=moodle_fpmi&redirect_uri=http://165.232.65.76/admin/oauth2callback.php&response_type=code`;
+      const moodleAuthUrl = `http://165.232.65.76/local/oauth/login.php?client_id=moodle_fpmi&redirect_uri=http://165.232.65.76/admin/oauth2callback.php&response_type=code`;
       try {
         await interaction.reply({ content: `Please authenticate with Moodle, using this link: ${moodleAuthUrl}`, ephemeral: true });
       } catch (error) {
