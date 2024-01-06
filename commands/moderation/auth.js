@@ -1,31 +1,27 @@
-const { SlashCommandBuilder } = require('discord.js');
-const firebaseAdmin = require('firebase-admin');
+const { SlashCommandBuilder, MessageActionRow, MessageButton } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('auth')
-        .setDescription('Authenticate with your Moodle account or get your Moodle ID'),
+        .setDescription('Authenticate with your Moodle account'),
+
     async execute(interaction) {
-        const discordUserId = interaction.user.id; 
-        const db = firebaseAdmin.firestore();
+        const oauthUrl = `http://165.232.65.76/local/oauth/login.php?client_id=moodle_fpmi&response_type=code`;
 
-        try {
-            const docRef = db.collection('students').doc(discordUserId);
-            const doc = await docRef.get();
+        
+        const row = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setLabel('Login to Moodle')
+                    .setStyle('LINK')
+                    .setURL(oauthUrl) 
+            );
 
-            if (doc.exists && doc.data().moodle_id) {
-                // The document exists and has a moodle_id, so reply
-                const moodleProfileUrl = `http://165.232.65.76/user/profile.php?id=${doc.data().moodle_id}`;
-                 await interaction.reply({ content: `Click here to view your Moodle profile: ${moodleProfileUrl}`, ephemeral: true });
-
-            } else {
-                // If no Moodle ID is found, provide instructions to log in
-                const moodleLoginUrl = `http://165.232.65.76/login`;
-                await interaction.reply({ content: `Please log in to Moodle using this link: ${moodleLoginUrl}, and after that run the command again`, ephemeral: true });
-            }
-        } catch (error) {
-            console.error("Error in Moodle command:", error);
-            await interaction.reply({ content: `There was an error processing your request.`, ephemeral: true });
-        }
+        
+        await interaction.reply({ 
+            content: 'Click the button below to log in to Moodle:', 
+            components: [row], 
+            ephemeral: true 
+        });
     },
 };
