@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require("discord.js");
-const axios = require('axios');
+const { SlashCommandBuilder, Client } = require("discord.js");
+const admin = require("firebase-admin");
 
 module.exports = {
   //the SlashCommandBuilder
@@ -14,24 +14,21 @@ module.exports = {
   }
 
   // Fetch the mapping data from Firestore
-  const mappingDoc = await firestore.doc(interaction.user.id).get();
-  const mappingData = mappingDoc.exists ? mappingDoc.data() : null;
+  const userSnap = await admin.firestore().collection('students').where('discordUserId','==',interaction.user.id).get();
+  const userData = !userSnap.empty ? userSnap.docs[0].data() : null;
 
-  if (!mappingData) {
+  if (!userData) {
     return interaction.reply('Mapping not found. Please set up the mapping first.');
   }
 
-  const { discordUserId, moodleUserId } = mappingData;
+  const { discordUserId, moodleUserId } = userData;
 
   try {
-    // Fetch Moodle user data based on Moodle user ID
-    const moodleUserData = await fetchMoodleUserData(moodleUserId);
+    // // Fetch Moodle user data based on Moodle user ID
+    // const moodleUserData = await fetchMoodleUserData(moodleUserId);
 
     // Update Moodle data based on Discord username and roles
-    await updateDiscordUserData(discordUserId, moodleUserData, {
-      username: interaction.user.username,
-      roles: interaction.member.roles.cache.map(role => role.name),
-    });
+    await updateDiscordUserData(discordUserId, userData);
 
     console.log(`Synchronized data for Moodle user ${moodleUserId} with Discord user ${discordUserId}`);
     interaction.reply('Synchronization complete!');
@@ -41,17 +38,11 @@ module.exports = {
   }
 }};
 
-// Replace with your logic to fetch Moodle user data
-async function fetchMoodleUserData(moodleUserId) {
-  const response = await axios.get(`${moodle.apiEndpoint}/users/${moodleUserId}`);
-  return response.data;
-}
-
 // Replace with your logic to update Moodle data
 async function updateDiscordUserData(discordUserId, moodleUserData) {
   // Implement your logic to update Discord user data
   // For example, you might use the Discord.js API to update username and roles
-  const user = await client.users.fetch(discordUserId);
+  const user = await Client.users.fetch(discordUserId);
 
   // Assuming moodleUserData contains fields like moodleUsername and moodleRole
   await user.setUsername(moodleUserData.moodleUsername);
