@@ -1,50 +1,48 @@
-const { SlashCommandBuilder, Client } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const admin = require("firebase-admin");
 
 module.exports = {
-  //the SlashCommandBuilder
-  data: new SlashCommandBuilder()
-    .setName("sync")
-    .setDescription("Synchronizing Discord with Moodle"),
-  //----------------------------------------------------------------------------
-  async execute(interaction) {
-  // Check if the user has the 'ADMINISTRATOR' permission
-  if (!interaction.member.permissions.has('ADMINISTRATOR')) {
-    return interaction.reply('You do not have permission to use this command.');
-  }
+    data: new SlashCommandBuilder()
+        .setName("sync")
+        .setDescription("Synchronize Discord with Firebase"),
 
-  // Fetch the mapping data from Firestore
-  const userSnap = await admin.firestore().collection('students').where('discordUserId','==',interaction.user.id).get();
-  const userData = !userSnap.empty ? userSnap.docs[0].data() : null;
+    async execute(interaction) {
+        const userRef = admin.firestore().collection('students').doc(interaction.user.id);
+        const doc = await userRef.get();
 
-  if (!userData) {
-    return interaction.reply('Mapping not found. Please set up the mapping first.');
-  }
+        if (!doc.exists) {
+            return interaction.reply('User data not found in Firebase. Please ensure the mapping is set up.');
+        }
 
-  const { discordUserId, moodleUserId } = userData;
+        const userData = doc.data();
+        const { cohort, firstname, lastname } = userData;
 
-  try {
-    // // Fetch Moodle user data based on Moodle user ID
-    // const moodleUserData = await fetchMoodleUserData(moodleUserId);
+        try {
+          
+            await changeRole(interaction, cohort);
 
-    // Update Moodle data based on Discord username and roles
-    await updateDiscordUserData(discordUserId, userData);
+          
+            await interaction.member.setNickname(`${firstname} ${lastname}`);
 
-    console.log(`Synchronized data for Moodle user ${moodleUserId} with Discord user ${discordUserId}`);
-    interaction.reply('Synchronization complete!');
-  } catch (error) {
-    console.error(`Error synchronizing data for Moodle user ${moodleUserId}:`, error);
-    interaction.reply('An error occurred during synchronization.');
-  }
-}};
+            console.log(`Synchronization complete for Discord user ${interaction.user.id}`);
+            interaction.reply('Your Moodle data has been synchronized with Discord.');
+        } catch (error) {
+            console.error(`Error during synchronization:`, error);
+            interaction.reply('An error occurred during synchronization.');
+        }
+    },
+};
 
-// Replace with your logic to update Moodle data
-async function updateDiscordUserData(discordUserId, moodleUserData) {
-  // Implement your logic to update Discord user data
-  // For example, you might use the Discord.js API to update username and roles
-  const user = await Client.users.fetch(discordUserId);
 
-  // Assuming moodleUserData contains fields like moodleUsername and moodleRole
-  await user.setUsername(moodleUserData.moodleUsername);
-  await user.roles.set([moodleUserData.moodleRole]);
+async function changeRole(interaction, cohort) {
+    const cohortYear = cohort.split('/').pop().trim();
+    const roleName = `iss${cohortYear}`;
+    const role = interaction.guild.roles.cache.find(r => r.name === roleName);
+
+    if (role) {
+        await interaction.member.roles.add(role);
+        console.log(`Role ${roleName} added to user ${interaction.user.id}`);
+    } else {
+        console.log(`Role ${roleName} not found for user ${interaction.user.id}`);
+    }
 }
