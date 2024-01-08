@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageActionRow, MessageButton } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const firebaseAdmin = require('firebase-admin');
 
 module.exports = {
@@ -23,17 +23,8 @@ module.exports = {
             } else {
                 // User needs to authenticate
                 const authUrl = `http://localhost:3000/auth?userId=${discordUserId}`;
-                const row = new MessageActionRow()
-                    .addComponents(
-                        new MessageButton()
-                            .setLabel('Authenticate with Moodle')
-                            .setStyle('LINK')
-                            .setURL(authUrl)
-                    );
-
                 await interaction.reply({ 
-                    content: 'Please click the button below to log in to Moodle and authenticate:',
-                    components: [row],
+                    content: `Please log in to Moodle to authenticate. Use this link: ${authUrl}`,
                     ephemeral: true
                 });
             }
@@ -46,3 +37,4 @@ module.exports = {
         }
     },
 };
+
