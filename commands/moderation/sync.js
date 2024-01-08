@@ -35,7 +35,8 @@ module.exports = {
 
 
 async function changeRole(interaction, cohorts) {
-    const roleName = `iss${cohorts}`;
+    const cohortYear = cohorts[0].name.split('/').pop().trim();
+    const roleName = `iss${cohortYear}`;
     const role = interaction.guild.roles.cache.find(r => r.name === roleName);
 
     if (role) {
