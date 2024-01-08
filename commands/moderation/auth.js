@@ -1,6 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const firebaseAdmin = require('firebase-admin');
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('auth')
@@ -8,26 +6,13 @@ module.exports = {
 
     async execute(interaction) {
         const discordUserId = interaction.user.id;
-        const userRef = firebaseAdmin.firestore().collection('students').doc(discordUserId);
-
         try {
-            const doc = await userRef.get();
-            if (doc.exists && doc.data().code) {
-                const moodleAccessToken = doc.data().code;
-                const moodleLoggedInUrl = `http://165.232.65.76/your_logged_in_page?access_token=${moodleAccessToken}`;
-
-                await interaction.reply({ 
-                    content: `You're already authenticated. Click here to access your Moodle site: ${moodleLoggedInUrl}`,
-                    ephemeral: true
-                });
-            } else {
                 // User needs to authenticate
                 const authUrl = `http://localhost:3000/auth?userId=${discordUserId}`;
                 await interaction.reply({ 
                     content: `Please log in to Moodle to authenticate. Use this link: ${authUrl}`,
                     ephemeral: true
                 });
-            }
         } catch (error) {
             console.error('Error accessing Firebase:', error);
             await interaction.reply({ 

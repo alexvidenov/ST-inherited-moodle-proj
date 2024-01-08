@@ -15,11 +15,11 @@ module.exports = {
         }
 
         const userData = doc.data();
-        const { cohort, firstname, lastname } = userData;
+        const { cohorts, firstname, lastname } = userData;
 
         try {
           
-            await changeRole(interaction, cohort);
+            await changeRole(interaction, cohorts);
 
           
             await interaction.member.setNickname(`${firstname} ${lastname}`);
@@ -34,9 +34,8 @@ module.exports = {
 };
 
 
-async function changeRole(interaction, cohort) {
-    const cohortYear = cohort.split('/').pop().trim();
-    const roleName = `iss${cohortYear}`;
+async function changeRole(interaction, cohorts) {
+    const roleName = `iss${cohorts}`;
     const role = interaction.guild.roles.cache.find(r => r.name === roleName);
 
     if (role) {

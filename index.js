@@ -114,11 +114,24 @@ const config = {
       },
       data : {}
     };
-    
+
     const userInfo = await axios(config2)
-    console.log(userInfo.data);
-    firebaseAdmin.firestore().collection('students').doc(req.cookies.discordUserId).set({...userInfo.data,
-      code: req.query.code
+
+    const config3 = {
+      method: 'get',
+      url: `http://165.232.65.76/webservice/rest/server.php?wstoken=bdde525e8e4f79c8fc4dc791549a7593&wsfunction=local_wsgetusercohorts&userid=${userInfo.data.id}&moodlewsrestformat=json`,
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Cookie': 'MoodleSession=ntc0j4dp6c4hufdjj2br2nj6kq'
+      },
+      data : {}
+    };
+
+    const userCohorts = await axios(config3);
+    firebaseAdmin.firestore().collection('students').doc(req.cookies.discordUserId).set({
+      ...userInfo.data,
+      code: req.query.code, 
+      cohorts: userCohorts.data.cohorts,
     }, { merge: true})
     res.send(`OAuth complete with details: Code ${req.query.code} Discord: ${req.cookies.discordUserId}`)
 
