@@ -82,21 +82,34 @@ app.get('/auth', (req, res) => {
 })
 
 app.get('/oauth', async (req, res) => {
+  const secretsCfgDocRef = firebaseAdmin.firestore().collection('config').doc("secrets_cfg")
+  const secretsCfgDoc = await secretsCfgDocRef.get();
+
+  const endpointsCfgDocRef = firebaseAdmin.firestore().collection('config').doc("endpoints_cfg")
+  const endpointsCfgDoc = await endpointsCfgDocRef.get();
+
+  const secretsCfgData = secretsCfgDoc.data();
+  const { oauth_client_id, oauth_client_secret, oauth_cookie, oauth_token } = secretsCfgData;
+
+  const endpointsCfgData = endpointsCfgDoc.data()
+  const  { moodle_instance } = endpointsCfgData;
+
+
   try { 
 const data = JSON.stringify({
   "code": req.query.code,
-  "client_id": "moodle_fpmi",
-  "client_secret": "55b18e8fee0bc5b3d353d0ff39c10d66c02792a8a411dba5",
+  "client_id": oauth_client_id,
+  "client_secret": oauth_client_secret,
   "grant_type": "authorization_code",
   "scope": "user_info"
 });
 
 const config = {
   method: 'post',
-  url: 'http://165.232.65.76/local/oauth/token.php',
+  url: `${moodle_instance}/local/oauth/token.php`,
   headers: { 
     'Content-Type': 'application/json', 
-    'Cookie': 'MoodleSession=ntc0j4dp6c4hufdjj2br2nj6kq'
+    'Cookie': oauth_cookie
   },
   data : data
 };
@@ -107,10 +120,10 @@ const config = {
     
     const config2 = {
       method: 'post',
-      url: `http://165.232.65.76/local/oauth/user_info.php?access_token=${userToken.data.access_token}`,
+      url: `${moodle_instance}/local/oauth/user_info.php?access_token=${userToken.data.access_token}`,
       headers: { 
         'Content-Type': 'application/json', 
-        'Cookie': 'MoodleSession=ntc0j4dp6c4hufdjj2br2nj6kq'
+        'Cookie': oauth_cookie
       },
       data : {}
     };
@@ -119,10 +132,10 @@ const config = {
 
     const config3 = {
       method: 'get',
-      url: `http://165.232.65.76/webservice/rest/server.php?wstoken=bdde525e8e4f79c8fc4dc791549a7593&wsfunction=local_wsgetusercohorts&userid=${userInfo.data.id}&moodlewsrestformat=json`,
+      url: `${moodle_instance}/webservice/rest/server.php?wstoken=${oauth_token}&wsfunction=local_wsgetusercohorts&userid=${userInfo.data.id}&moodlewsrestformat=json`,
       headers: { 
         'Content-Type': 'application/json', 
-        'Cookie': 'MoodleSession=ntc0j4dp6c4hufdjj2br2nj6kq'
+        'Cookie': oauth_cookie
       },
       data : {}
     };
