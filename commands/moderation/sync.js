@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const admin = require("firebase-admin");
+const splitCohort = require("../../utils/split-cohort");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,8 +36,26 @@ module.exports = {
 
 
 async function changeRole(interaction, cohorts) {
-    const cohortYear = cohorts[0].name.split('/').pop().trim();
-    const roleName = `iss${cohortYear}`;
+    const config = await admin.firestore().collection('config').doc('bot_config').get();
+    if(!config.exists) {
+        console.error('Bot config not found in Firebase. Please ensure the mapping is set up.');
+        return;
+    }
+
+    const [cohortName, cohortYear] = splitCohort(cohorts[0].name);
+    if(!cohortName || !cohortYear) {
+        console.error(`Cohort name "${cohorts[0].name}" could not be split into name and year.`);
+        return;
+    }
+
+    const rolePrefix = config.data().roles[cohortName];
+    
+    if(!rolePrefix) {
+        console.error(`Prefix for role "${cohortName}" not found in bot config.`);
+        return;
+    }
+
+    const roleName = `${rolePrefix}${cohortYear}`;
     const role = interaction.guild.roles.cache.find(r => r.name === roleName);
 
     if (role) {
