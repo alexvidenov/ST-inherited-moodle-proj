@@ -56,7 +56,9 @@ async function changeRole(interaction, cohorts) {
     }
 
     const roleName = `${rolePrefix}${cohortYear}`;
-    const role = interaction.guild.roles.cache.find(r => r.name === roleName);
+    const roles = await interaction.guild?.roles.fetch();
+
+    const role = roles.find(r => r.name === roleName);
 
     if (role) {
         await interaction.member.roles.add(role);

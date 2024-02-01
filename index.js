@@ -3,13 +3,13 @@ const path = require("node:path");
 const express = require('express')
 const cookieParser = require('cookie-parser')
 
-const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
+const { Client, Collection, Events } = require("discord.js");
 const firebaseAdmin = require('firebase-admin');
 const serviceAccount = require('./firebase/fpmi-intermediary-firebase-adminsdk-re8cp-1f6379b6ea.json');
 const { default: axios } = require("axios");
 require("dotenv").config();
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({   intents: ["Guilds", "GuildMessages", "DirectMessages"],});
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount)
